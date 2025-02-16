@@ -16,6 +16,7 @@ services:
       - "TS_STATE_DIR=/var/lib/tailscale"
       - "TS_USERSPACE=false"
     hostname: keycloak
+    restart: unless-stopped
     image: tailscale/tailscale:v1.80.0
     restart: unless-stopped
     volumes:
@@ -33,6 +34,7 @@ services:
         window: 120s
   postgres:
     image: postgres:17.2
+    restart: unless-stopped
     volumes:
       - keycloak_pg_data:/var/lib/postgresql/data
     environment:
@@ -81,9 +83,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
     depends_on:
       - postgres
-
       - ts-keycloak
     deploy:
       resources:
