@@ -1,37 +1,4 @@
 services:
-  ts-keycloak:
-    cap_add:
-      - net_admin
-      - sys_module
-    container_name: ts-keycloak
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    dns:
-      - 100.100.100.100 # For tailnet address (<mach>.<tailnet>.ts.net) lookups.
-      - 1.1.1.1 # For external lookups.
-    environment:
-      - "TS_AUTHKEY=${TS_AUTH_KEY}"
-      # - "TS_EXTRA_ARGS=--advertise-tags=tag:container"
-      - "TS_SERVE_CONFIG=/config/keycloak.json"
-      - "TS_STATE_DIR=/var/lib/tailscale"
-      - "TS_USERSPACE=false"
-    hostname: keycloak
-    restart: unless-stopped
-    image: tailscale/tailscale:v1.80.0
-    restart: unless-stopped
-    volumes:
-      - ${PWD}/tailscale-keycloak/state:/var/lib/tailscale
-      - ${PWD}/config:/config
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 50M
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
   postgres:
     image: postgres:17.2
     restart: unless-stopped
@@ -51,47 +18,6 @@ services:
         limits:
           cpus: "0.25"
           memory: 75M
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      update_config:
-        parallelism: 2
-        delay: 10s
-        order: start-first
-  keycloak:
-    container_name: keycloak
-    network_mode: service:ts-keycloak
-    healthcheck:
-      test: ["CMD-SHELL", "curl localhost:9000/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    image: quay.io/keycloak/keycloak:26.1.2
-    command: start
-    environment:
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT_BACKCHANNEL: false
-      KC_HTTP_ENABLED: true
-      KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HEALTH_ENABLED: true
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
-      KC_DB_USERNAME: ${POSTGRES_USER}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    restart: unless-stopped
-    depends_on:
-      - postgres
-      - ts-keycloak
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 500M
       restart_policy:
         condition: on-failure
         delay: 5s
